@@ -1,5 +1,7 @@
 package com.windsoft.means;
 
+import android.content.SharedPreferences;
+
 /**
  * Created by dongkyu on 2015-06-14.
  */
@@ -51,6 +53,13 @@ public class Global {
             CHILD
     };
 
+    public static String SONG_INDEX = "songIndex";
+
+    public static SharedPreferences pref;
+    public static SharedPreferences.Editor editor;
+    public static final String PREF_KEY = "muzik";
+    public static final String COUNT_KEY = "count";
+
     public static final String QUERY_NAVER_MUSIC = "http://music.naver.com/search/search.nhn?query=";
     public static final String QUERY_GENIE_MUSIC = "http://www.genie.co.kr/Search/f_Search_Main.asp?query=";
 
@@ -61,13 +70,20 @@ public class Global {
     public static final int NULL = -1;
 
     public static final String COMMAND_KEY = "command";
+    public static final String ID_KEY = "id";
+    public static final String SONG_NAME_KEY = "songName";
+    public static final String SONG_SCORE_KEY = "songScore";
     public static final String LOGIN_ID_KEY = "loginId";
     public static final String LOGIN_KEY = "login";
     public static final String CHECK_DB = "checkDB";
     public static final String REQ_DB = "reqDB";
     public static final String RES_DB = "resDB";
+    public static final String GET_MUSIC_KEY = "getMusic";
+    public static final String GET_PHOTO_KEY = "getphoto";
+    public static final String MUSIC_NAME_KEY = "musicName";
+    public static final String PHOTO_NAME_KEY = "photoName";
     public static final String CONNECT_SERVER = "connectServer";
-    public static final String SERVER_URL = "muzikserver.herokuapp.com";
+    public static final String SERVER_URL = "http://muzik-server.herokuapp.com";
 
     public static final String USER_ID = "id";
     public static final String USER_SONG = "song";
@@ -77,8 +93,10 @@ public class Global {
     public static final String SONG_USER_ID = "userId";
     public static final String SONG_SCORE = "score";
 
+    public static final String GOOGLE_AUTH_KEY = "186735483118-ur14q3iatdlqgncco4l4g9nhobn71o2p.apps.googleusercontent.com";
 
     public static final String COND = "cond";
 
     public static String ID = null;
+
 }
