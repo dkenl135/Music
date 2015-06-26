@@ -8,17 +8,13 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
-import com.windsoft.means.activity.LoginActivity;
 import com.windsoft.means.activity.MainActivity;
 
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.Source;
-
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.InputStream;
@@ -32,9 +28,9 @@ public class MusicService extends Service {
 
     private final String TAG = "MusicService";
 
-    private Socket socket;
+    private MusicSockt socket;
 
-    private String song = null;
+    private boolean getSong = false;
 
     public MusicService() {
     }
@@ -46,28 +42,25 @@ public class MusicService extends Service {
             String command = intent.getStringExtra(Global.COMMAND_KEY);
 
             if (command != null) {
-                processCommand(command, intent);
+                if (command.equals(Global.CHECK_DB)) {      // DB 체크
+                    commandCheckDB();
+                } else if (command.equals(Global.REQ_DB)) {     // DB 새로고침 요청
+                    int i = Global.pref.getInt(Global.SONG_INDEX, 0);
+                    int j = Global.pref.getInt(Global.PAGE_INDEX, 1);
+                    commandReqDB(i, j);
+                    if (++i == Global.SONG_LIST.length) i = 0;
+                    if (++j == 6) i = 1;
+                    Global.editor.putInt(Global.SONG_INDEX, i);
+                    Global.editor.putInt(Global.PAGE_INDEX, j);
+                } else if (command.equals(Global.LOGIN_KEY)) {
+                    commandLoginKey(intent);
+                } else if (command.equals(Global.CONNECT_SERVER)) {
+                    commandConnectServer();
+                }
             }
         }
 
         return super.onStartCommand(intent, flags, startId);
-    }
-
-    private void processCommand(String command, Intent intent) {
-        if (command.equals(Global.CHECK_DB)) {      // DB 체크
-            commandCheckDB();
-        } else if (command.equals(Global.REQ_DB)) {     // DB 새로고침 요청
-            int i = Global.pref.getInt(Global.SONG_INDEX, 0);
-            commandReqDB(i);
-
-            i++;
-            if (i == Global.SONG_LIST.length) i = 0;
-            Global.editor.putInt(Global.SONG_INDEX, i);
-        } else if (command.equals(Global.LOGIN_KEY)) {
-            commandLoginKey(intent);
-        } else if (command.equals(Global.CONNECT_SERVER)) {
-            commandConnectServer();
-        }
     }
 
 
@@ -79,28 +72,9 @@ public class MusicService extends Service {
             Log.d(TAG, "commandConnectServer()");
             Log.d(TAG, Global.SERVER_URL);
 
-            if (socket != null && socket.connected()) {
-                socket.disconnect();
-            }
+            Socket curSocket = IO.socket(Global.SERVER_URL);;
 
-            socket = IO.socket(Global.SERVER_URL);
-            Log.d(TAG, "Muzik 서버 연결 요청");
-
-            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-                @Override
-                public void call(Object... args) {
-                    Intent intent = new Intent(MusicService.this, LoginActivity.class);
-                    intent.putExtra(Global.COMMAND_KEY, Global.CONNECT_SERVER);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-
-                    Log.d(TAG, "Muzik 서버 연결 완료");
-                }
-            });
-
-            socket.open();
-            socket.connect();
-
+            socket = new MusicSockt(this, curSocket);
         } catch (Exception e) {
             Log.e(TAG, "commandConnectServer() 에러 = " + e.getMessage());
         }
@@ -113,60 +87,33 @@ public class MusicService extends Service {
     * */
     private void commandLoginKey(final Intent intent) {
         Log.d(TAG, "commandLoginKey()");
-        try {
-            String id = intent.getStringExtra(Global.LOGIN_ID_KEY);
-
-            JSONObject obj = new JSONObject();
-            obj.put(Global.USER_ID, id);
-
-            socket.emit(Global.LOGIN_KEY, obj);
-            Log.d(TAG, "로그인 요청");
-
-            socket.on(Global.LOGIN_KEY, new Emitter.Listener() {
-                @Override
-                public void call(Object... args) {
-                    Log.d(TAG, "로그인 응답");
-                    Log.i(TAG, "로그인 성공");
-
-                    for (int i = 0; i < args.length; i++) {
-                        Log.d(TAG, "args = " + args[i]);
-                    }
-
-                    int cond = (int) args[0];
-                    String id = (String) args[1];
-                    String[] songList = (String[]) args[2];
-                    int[] scoreList = (int[]) args[3];
-
-                    Intent intent1 = new Intent(MusicService.this, LoginActivity.class);
-                    intent1.putExtra(Global.COMMAND_KEY, Global.LOGIN_KEY);
-                    intent1.putExtra(Global.COND, cond);
-                    intent1.putExtra(Global.ID_KEY, id);
-                    intent1.putExtra(Global.SONG_NAME_KEY, songList);
-                    intent1.putExtra(Global.SONG_SCORE_KEY, scoreList);
-                    intent1.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent1);
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "commandLoginKey() 에러 = " + e.getMessage());
-        }
+        String id = intent.getStringExtra(Global.LOGIN_ID_KEY);
+        socket.login(id);
     }
 
 
     /*
     * TODO: 장르별 노래 데이터 받아오기
     * */
-    private void commandReqDB(final int i) {
+    private void commandReqDB(final int i, final int j) {
         Log.d(TAG, "commandReqDB()");
         new Thread(new Runnable() {
             @Override
             public void run() {
-                for (int j = 1; j <= 5; j++) {
+                getSong = false;
+
                     /*
                     * TODO:Genie 사이트에서 장르별 노래 데이터 파싱
                     * @param: Global.SONG_LIST[i] = 장르 데이터, j = page
                     * */
-                    getSongChart(Global.SONG_LIST[i] + j);
+                getSongChart(Global.SONG_LIST[i] + j);
+
+                while (!getSong) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+
+                    }
                 }
 
                 Intent intent = new Intent(MusicService.this, MainActivity.class);
@@ -182,6 +129,8 @@ public class MusicService extends Service {
 
     private void getSongChart(final String urlStr) {
         try {
+            ArrayList<String> songs = new ArrayList<>();
+
             Log.d(TAG, "url = " + urlStr);
             URL url = new URL(urlStr);
             InputStream is = url.openStream();
@@ -194,13 +143,45 @@ public class MusicService extends Service {
                 String title = input.getAttributeValue("title");
 
                 if (title != null) {
-                    title = title.replace("'", "\\\'");
-                    if (Global.manager.find(title) == null) {       // 중복검사
-                        Global.manager.insert(title);               // DB 입력
-                        Log.d(TAG, "title = " + title);
+                    title = title.replace("'", "\"");
+                    songs.add(title);
+                }
+            }
+
+            ArrayList<String> artists = new ArrayList<>();
+
+            Log.d(TAG, "url = " + urlStr);
+            url = new URL(urlStr);
+            is = url.openStream();
+            source = new Source(new InputStreamReader(is, "utf-8"));
+            source.fullSequentialParse();
+
+            list = source.getAllElements(HTMLElementName.SPAN);
+
+            for (Element span : list) {
+                String curClass = span.getAttributeValue("class");
+
+                if (curClass != null && curClass.equals("meta")) {
+                    List<Element> aList = span.getAllElements(HTMLElementName.A);
+
+                    for (Element a : aList) {
+                        String artist = (a.getContent().toString()).replaceAll("'", "\"");
+                        artists.add(artist);
+                        break;
                     }
                 }
             }
+
+            Log.d(TAG, "노래 사이즈 = " + songs.size());
+            Log.d(TAG, "아티스트 사이즈 = " + artists.size());
+
+            for (int i = 0; i < songs.size(); i++) {
+                if (Global.manager.find(songs.get(i), artists.get(i)) == null) {
+                    Global.manager.insert(songs.get(i), artists.get(i));
+                }
+            }
+
+            getSong = true;
 
             is.close();
             source.clearCache();
@@ -242,8 +223,10 @@ public class MusicService extends Service {
                         startService(intent);
                     } else {
                         Log.d(TAG, "DB 있음");
-
-                        ArrayList<MusicModel> models = Global.manager.findAll();
+                        Intent intent = new Intent(MusicService.this, MainActivity.class);
+                        intent.putExtra(Global.COMMAND_KEY, Global.RES_DB);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "commandCheckDB() 에러 = " + e.getMessage());

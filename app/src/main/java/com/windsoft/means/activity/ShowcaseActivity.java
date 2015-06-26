@@ -1,8 +1,8 @@
 package com.windsoft.means.activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.RelativeLayout;
 
@@ -10,7 +10,7 @@ import com.windsoft.means.Global;
 import com.windsoft.means.R;
 
 
-public class ShowcaseActivity extends ActionBarActivity {
+public class ShowcaseActivity extends Activity {
 
     private RelativeLayout container;
 

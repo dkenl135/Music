@@ -1,13 +1,22 @@
-package com.windsoft.means;
+package com.windsoft.means.model;
 
 /**
  * Created by dongkyu on 2015-06-14.
  */
 public class MusicModel {
     private String name;
+    private String artist;
     private int like;
 
     public MusicModel() {
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public void setArtist(String artist) {
+        this.artist = artist;
     }
 
     public MusicModel(int like) {

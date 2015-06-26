@@ -54,6 +54,7 @@ public class Global {
     };
 
     public static String SONG_INDEX = "songIndex";
+    public static String PAGE_INDEX = "pageIndex";
 
     public static SharedPreferences pref;
     public static SharedPreferences.Editor editor;
@@ -67,11 +68,11 @@ public class Global {
 
     public static final int ERROR = 0;
     public static final int SUCCESS = 1;
-    public static final int NULL = -1;
 
     public static final String COMMAND_KEY = "command";
     public static final String ID_KEY = "id";
     public static final String SONG_NAME_KEY = "songName";
+    public static final String ARTIST_KEY = "artist";
     public static final String SONG_SCORE_KEY = "songScore";
     public static final String LOGIN_ID_KEY = "loginId";
     public static final String LOGIN_KEY = "login";
@@ -84,6 +85,7 @@ public class Global {
     public static final String PHOTO_NAME_KEY = "photoName";
     public static final String CONNECT_SERVER = "connectServer";
     public static final String SERVER_URL = "http://muzik-server.herokuapp.com";
+    public static final String PHOTO_SRC_KEY = "src";
 
     public static final String USER_ID = "id";
     public static final String USER_SONG = "song";
@@ -98,5 +100,10 @@ public class Global {
     public static final String COND = "cond";
 
     public static String ID = null;
+
+    public static final int NULL = 10;
+    public static final int GOOD = 1;
+    public static final int SOSO = 0;
+    public static final int BAD = -1;
 
 }

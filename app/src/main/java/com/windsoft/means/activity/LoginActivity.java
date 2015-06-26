@@ -188,12 +188,10 @@ public class LoginActivity extends Activity {
                 if (command.equals(Global.CONNECT_SERVER)) {                    // 서버 접속 완료
                     processConnectServerCommand();
                 } else if (command.equals(Global.LOGIN_KEY)) {                  // 로그인 완료
-                    String id = intent.getStringExtra(Global.USER_ID);
-                    String[] nameList = intent.getStringArrayExtra(Global.SONG_NAME_KEY);
-                    int[] scoreList = intent.getIntArrayExtra(Global.SONG_SCORE_KEY);
+                    String id = intent.getStringExtra(Global.ID_KEY);
                     int cond = intent.getIntExtra(Global.COND, 0);
 
-                    processLogin(cond, nameList, scoreList, id);
+                    processLogin(cond, id);
                 }
             }
         }
@@ -206,7 +204,7 @@ public class LoginActivity extends Activity {
     * TODO: 로그인 연결 RES
     * @param : intent = 에러 정보
     * */
-    private void processLogin(int cond, String[] nameList, int[] scoreList, String id) {
+    private void processLogin(int cond, String id) {
         Log.d(TAG, "processLogin()");
 
 
@@ -223,9 +221,6 @@ public class LoginActivity extends Activity {
             } else {
                 intent = new Intent(LoginActivity.this, MainActivity.class);                        // 메인 액티비티
             }
-            intent.putExtra(Global.ID_KEY, id);
-            intent.putExtra(Global.SONG_NAME_KEY, nameList);
-            intent.putExtra(Global.SONG_SCORE_KEY, scoreList);
 
             addCount();                     // 앱 실행 횟수 증가
             startActivity(intent);
