@@ -69,6 +69,10 @@ public class AppraisalFragment extends Fragment {
         String titleStr = ((MainActivity) getActivity()).getSong(index);
         String artist = ((MainActivity) getActivity()).getArtist(index);
 
+        if (titleStr.length() > 15) {                           // 10글자 넘어가면 ...으로 자르기
+            titleStr = titleStr.substring(0, 15) + "...";
+        }
+
         title = (TextView) view.findViewById(R.id.fragment_appraisal_title);
         title.setText(titleStr);
         Log.i(TAG, "title = " + titleStr);
