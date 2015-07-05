@@ -86,6 +86,11 @@ public class Global {
     public static final String CONNECT_SERVER = "connectServer";
     public static final String SERVER_URL = "http://muzik-server.herokuapp.com";
     public static final String PHOTO_SRC_KEY = "src";
+    public static final String APPRAISAL = "appraisal";
+    public static final String KEY_POSITION = "position";
+    public static final String RECOMMEND = "recommend";
+    public static final String KEY_BEST_SONG = "bestSong";
+
 
     public static final String USER_ID = "id";
     public static final String USER_SONG = "song";

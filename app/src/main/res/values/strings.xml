@@ -7,4 +7,5 @@
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_showcase">ShowcaseActivity</string>
     <string name="kakao_app_key">973417f2c5b0606089b582bdc51bc99d</string>
+    <string name="title_activity_appraisal">AppraisalActivity</string>
 </resources>

@@ -15,11 +15,15 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.nhn.android.naverlogin.ui.view.OAuthLoginButton;
 import com.windsoft.means.Global;
+import com.windsoft.means.MP3Explorer;
 import com.windsoft.means.MusicService;
 import com.windsoft.means.R;
 import com.windsoft.means.login.FacebookLogin;
 import com.windsoft.means.login.GoogleLogin;
 import com.windsoft.means.login.NaverLogin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class LoginActivity extends Activity {
@@ -139,9 +143,16 @@ public class LoginActivity extends Activity {
     * @param: token = 고유 회원 코드
     * */
     public void login(String id) {
+        MP3Explorer explorer = new MP3Explorer(this);
+        ArrayList<String> mp3List = explorer.getMP3DataList();
+
+        List<String> list = (mp3List.size() > 7) ? mp3List.subList(0, 7) : mp3List.subList(0, mp3List.size());
+        mp3List = new ArrayList<>(list);
+
         Intent intent = new Intent(LoginActivity.this, MusicService.class);
         intent.putExtra(Global.COMMAND_KEY, Global.LOGIN_KEY);        // 회원 가입
         intent.putExtra(Global.LOGIN_ID_KEY, id);                   // 아이디
+        intent.putExtra(Global.KEY_BEST_SONG, mp3List);
         startService(intent);
     }
 
@@ -200,6 +211,7 @@ public class LoginActivity extends Activity {
     }
 
 
+
     /*
     * TODO: 로그인 연결 RES
     * @param : intent = 에러 정보
@@ -207,15 +219,9 @@ public class LoginActivity extends Activity {
     private void processLogin(int cond, String id) {
         Log.d(TAG, "processLogin()");
 
-
-        if (cond == Global.ERROR) {
-            Toast.makeText(getApplicationContext(), "로그인 실패", Toast.LENGTH_SHORT).show();
-        } else if (cond == Global.SUCCESS) {
-            Toast.makeText(getApplicationContext(), "로그인 성공", Toast.LENGTH_SHORT).show();
-
-            Global.ID = id;
-
+        if (cond == Global.SUCCESS) {
             Intent intent;
+
             if (count == 0) {                   // 앱을 처음 실행
                 intent = new Intent(LoginActivity.this, ShowcaseActivity.class);                    // 쇼케이스 뷰
             } else {
@@ -225,6 +231,16 @@ public class LoginActivity extends Activity {
             addCount();                     // 앱 실행 횟수 증가
             startActivity(intent);
             finish();
+
+
+            Toast.makeText(getApplicationContext(), "로그인 성공", Toast.LENGTH_SHORT).show();
+
+            Global.ID = id;
+
+            Global.editor.putString(Global.LOGIN_ID_KEY, id);
+            Global.editor.commit();
+        } else if (cond == Global.ERROR) {
+            Toast.makeText(getApplicationContext(), "로그인 실패", Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 import com.windsoft.means.Global;
 import com.windsoft.means.R;
+import com.windsoft.means.model.MusicModel;
 
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
@@ -23,7 +24,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by dongkyu on 2015-06-21.
@@ -35,17 +35,21 @@ public class AppraisalFragment extends Fragment {
     private TextView title;
     private ImageView image;
 
-    private int size;
+    private String titleStr;
+    private String artistStr;
+
     private String src;
 
     private Handler handler = new Handler();
 
-    public static AppraisalFragment newInstance(int size) {
-
+    public static AppraisalFragment newInstance(MusicModel model) {
         AppraisalFragment fragment = new AppraisalFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("size", size);
-        fragment.setArguments(bundle);
+        if (model != null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("title", model.getName());
+            bundle.putString("artist", model.getArtist());
+            fragment.setArguments(bundle);
+        }
         return fragment;
     }
 
@@ -53,21 +57,23 @@ public class AppraisalFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        size = getArguments().getInt("size");
-
+        Bundle bundle = getArguments();
+        titleStr = bundle.getString("title");
+        artistStr = bundle.getString("artist");
     }
+
+
+    public String getTitle() {
+        return titleStr;
+    }
+
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_appraisal, container, false);
         Log.d(TAG, "onCreateView()");
-
-
-        Random random = new Random();
-        int index = random.nextInt(size);
-        String titleStr = ((MainActivity) getActivity()).getSong(index);
-        String artist = ((MainActivity) getActivity()).getArtist(index);
 
         if (titleStr.length() > 15) {                           // 10글자 넘어가면 ...으로 자르기
             titleStr = titleStr.substring(0, 15) + "...";
@@ -78,7 +84,7 @@ public class AppraisalFragment extends Fragment {
         Log.i(TAG, "title = " + titleStr);
 
         image = (ImageView) view.findViewById(R.id.fragment_appraisal_image);
-        getPhotoSrc(titleStr, artist);
+        getPhotoSrc(titleStr, artistStr);
 
         return view;
     }
@@ -116,19 +122,17 @@ public class AppraisalFragment extends Fragment {
                                 if ((imgList.toString().equals("[]"))) continue;
 
                                 for (Element img : imgList) {
-                                    Log.d(TAG, "img = " + img);
-
                                     src = "http:" +  img.getAttributeValue("src");
-                                    Log.d(TAG, "src = " + src);
-
                                     handler.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Picasso.with(getActivity())
-                                                    .load(src)
-                                                    .resize(500, 500)
-                                                    .placeholder(R.mipmap.ic_launcher)
-                                                    .into(image);
+                                            if (getActivity() != null) {
+                                                Picasso.with(getActivity())
+                                                        .load(src)
+                                                        .resize(500, 500)
+                                                        .placeholder(R.drawable.no_image)
+                                                        .into(image);
+                                            }
                                         }
                                     });
                                     break;
@@ -151,5 +155,6 @@ public class AppraisalFragment extends Fragment {
             }
         }).start();
     }
+
 
 }

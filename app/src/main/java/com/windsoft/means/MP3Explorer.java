@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -94,12 +95,12 @@ public class MP3Explorer {
     }
 
 
-    public ArrayList<MP3Model> getMP3DataList(ArrayList<String> pathList) {
+    public ArrayList<String> getMP3DataList() {
 
         ArrayList<MP3Model> models = new ArrayList<>();
 
         Cursor c = activity.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[] {MediaStore.Audio.Media.TITLE},
+                new String[] {MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.DURATION},
                 null,
                 null,
                 null);
@@ -110,23 +111,57 @@ public class MP3Explorer {
         }
 
         if (c.moveToFirst()) {
-            int titleindex = c.getColumnIndex(MediaStore.Audio.Media.TITLE);
+            int titleIndex = c.getColumnIndex(MediaStore.Audio.Media.TITLE);
+            int artistIndex = c.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            int dataIndex = c.getColumnIndex(MediaStore.Audio.Media.DATA);
+            int countIndex = c.getColumnIndex(MediaStore.Audio.Media.DURATION);
             do {
-                String title = c.getString(titleindex);
-                models.add(new MP3Model(title));
+                String title = c.getString(titleIndex);
+                String artist = c.getString(artistIndex);
+                String data = c.getString(dataIndex);
+                int count = c.getInt(countIndex);
+                if (data.indexOf(".mp3") != -1) {
+                    /**
+                     * 재생시간 긴 순으로 입력
+                     * */
+                    if (models.size() == 0) {
+                        models.add(new MP3Model(title, artist, count));
+                    } else {
+                        for (int i = 0; i < models.size(); i++) {
+                            if (models.get(i).getPlayCount() < count) {                 // 재생시간이 더 길다면
+                                models.add(i, new MP3Model(title, artist, count));
+                                break;
+                            }
+                        }
+                    }
+                }
             } while (c.moveToNext());
         }
 
+        ArrayList<String> list = new ArrayList<>();
+
+        for (int i = 0; i < models.size(); i++) {
+            list.add(models.get(i).getTitle());
+        }
+
         c.close();
-        return models;
+        return list;
     }
 
 
-    public static class MP3Model {
+    public static class MP3Model implements Serializable {
         private String title;
+        private String artist;
+        private int playCount;
 
         public MP3Model(String title) {
             this.title = title;
+        }
+
+        public MP3Model(String title, String artist, int playCount) {
+            this.title = title;
+            this.artist = artist;
+            this.playCount = playCount;
         }
 
         public String getTitle() {
@@ -135,6 +170,22 @@ public class MP3Explorer {
 
         public void setTitle(String title) {
             this.title = title;
+        }
+
+        public String getArtist() {
+            return artist;
+        }
+
+        public void setArtist(String artist) {
+            this.artist = artist;
+        }
+
+        public int getPlayCount() {
+            return playCount;
+        }
+
+        public void setPlayCount(int playCount) {
+            this.playCount = playCount;
         }
     }
 }
